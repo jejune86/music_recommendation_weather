@@ -5,10 +5,13 @@ import static android.content.ContentValues.TAG;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.example.musicrecommendation.data.model.Weather;
 import com.example.musicrecommendation.data.model.WeatherResponse;
 import com.example.musicrecommendation.service.WeatherAPIInterface;
 import com.example.musicrecommendation.service.WeatherService;
@@ -18,6 +21,7 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import android.location.Location;
 import android.util.Log;
+import android.widget.TextView;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -30,6 +34,14 @@ import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient fusedLocationClient;
+    private WeatherService weatherService;
+
+    // 콜백 인터페이스 추가
+    interface LocationCallback {
+        void onLocationReceived(Location location);
+    }
+
+    private TextView tvTemperature, tvSky, tvPrecipitationType, tvPrecipitation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,49 +50,67 @@ public class MainActivity extends AppCompatActivity {
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-        // 위치 권한이 허용되었는지 확인
+        tvTemperature = findViewById(R.id.tvTemperature);
+        tvSky = findViewById(R.id.tvSky);
+        tvPrecipitationType = findViewById(R.id.tvPrecipitationType);
+        tvPrecipitation = findViewById(R.id.tvPrecipitation);
+
+
+        // 초기 날씨 데이터 표시
+        Weather weather = Weather.getInstance();
+        tvTemperature.setText("온도: 로딩 중...");
+        tvSky.setText("하늘 상태: 로딩 중...");
+        tvPrecipitationType.setText("강수 형태: 로딩 중...");
+        tvPrecipitation.setText("강수량: 로딩 중...");
+
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         } else {
-            getLastKnownLocation();
+            getLastKnownLocation(new LocationCallback() {
+                @Override
+                public void onLocationReceived(Location location) {
+                    fetchWeatherData(location);
+                }
+            });
         }
     }
 
-    // 마지막으로 알려진 위치 가져오기
-    private void getLastKnownLocation() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            fusedLocationClient.getLastLocation()
-                    .addOnCompleteListener(this, new OnCompleteListener<Location>() {
+    private void getLastKnownLocation(LocationCallback callback) {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+        
+        fusedLocationClient.getLastLocation()
+            .addOnCompleteListener(this, new OnCompleteListener<Location>() {
+                @Override
+                public void onComplete(@NonNull Task<Location> task) {
+                    if (task.isSuccessful() && task.getResult() != null) {
+                        callback.onLocationReceived(task.getResult());
+                    }
+                }
+            });
+    }
+
+    private void fetchWeatherData(Location location) {
+        if (location != null) {
+            weatherService = new WeatherService();
+            weatherService.getWeatherData(location.getLatitude(), location.getLongitude(), new WeatherService.WeatherCallback() {
+                @Override
+                public void onWeatherDataReceived() {
+                    // UI 업데이트는 메인 스레드에서 실행해야 합니다
+                    runOnUiThread(new Runnable() {
                         @Override
-                        public void onComplete(Task<Location> task) {
-                            if (task.isSuccessful() && task.getResult() != null) {
-                                Location location = task.getResult();
-                                double latitude = location.getLatitude();
-                                double longitude = location.getLongitude();
-                                Log.d(TAG, "Latitude: " + latitude + ", Longitude: " + longitude);
-
-                                // 위도와 경도를 사용하여 날씨 API 호출
-                                // 좌표를 격자 X, Y로 변환
-
-                                // WeatherService로 날씨 데이터 요청
-                                WeatherService weatherService = new WeatherService();
-                                weatherService.getWeatherData(latitude, longitude, "API_KEY");
-                            } else {
-                                Log.e(TAG, "Unable to get location");
-                            }
+                        public void run() {
+                            Weather weather = Weather.getInstance();
+                            tvTemperature.setText("온도: " + weather.getTemperature() + "°C");
+                            tvSky.setText("하늘 상태: " + weather.getSky());
+                            tvPrecipitationType.setText("강수 형태: " + weather.getPrecipitationType());
+                            tvPrecipitation.setText("강수량: " + weather.getPrecipitation() + "mm");
                         }
                     });
+                }
+            });
         }
     }
-
-    // 위치 권한 요청 결과 처리
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 1 && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getLastKnownLocation();
-        }
-    }
-
 }

@@ -1,158 +1,228 @@
 package com.example.musicrecommendation.data.model;
 
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 
 public class WeatherResponse {
 
-    @SerializedName("numOfRows")
-    private int numOfRows; // 한 페이지 결과 수
+    @SerializedName("response")
+    private Response response;
 
-    @SerializedName("pageNo")
-    private int pageNo; // 페이지 번호
+    public static class Response {
+        @SerializedName("header")
+        private Header header;
+        @SerializedName("body")
+        private Body body;
 
-    @SerializedName("totalCount")
-    private int totalCount; // 데이터 총 개수
+        // Getters and Setters
+        public Header getHeader() {
+            return header;
+        }
 
-    @SerializedName("resultCode")
-    private String resultCode; // 응답 메시지 코드
+        public void setHeader(Header header) {
+            this.header = header;
+        }
 
-    @SerializedName("resultMsg")
-    private String resultMsg; // 응답 메시지 내용
+        public Body getBody() {
+            return body;
+        }
 
-    @SerializedName("dataType")
-    private String dataType; // 데이터 타입
+        public void setBody(Body body) {
+            this.body = body;
+        }
 
-    @SerializedName("baseDate")
-    private String baseDate; // 발표일자
+        public static class Header {
+            @SerializedName("resultCode")
+            private String resultCode;
+            @SerializedName("resultMsg")
+            private String resultMsg;
 
-    @SerializedName("baseTime")
-    private String baseTime; // 발표 시각
+            // Getters and Setters
+            public String getResultCode() {
+                return resultCode;
+            }
 
-    @SerializedName("nx")
-    private int nx; // 예보지점 X 좌표
+            public void setResultCode(String resultCode) {
+                this.resultCode = resultCode;
+            }
 
-    @SerializedName("ny")
-    private int ny; // 예보지점 Y 좌표
+            public String getResultMsg() {
+                return resultMsg;
+            }
 
-    @SerializedName("category")
-    private String category; // 자료 구분 코드
+            public void setResultMsg(String resultMsg) {
+                this.resultMsg = resultMsg;
+            }
+        }
 
-    @SerializedName("obsrValue")
-    private String obsrValue; // 실황 값
+        public static class Body {
+            @SerializedName("dataType")
+            private String dataType;
+            @SerializedName("items")
+            private Items items;
 
-    // Getter and Setter Methods
-    public int getNumOfRows() {
-        return numOfRows;
+            public String getDataType() {
+                return dataType;
+            }
+
+            public void setDataType(String dataType) {
+                this.dataType = dataType;
+            }
+
+            public Items getItems() {
+                return items;
+            }
+
+            public void setItems(Items items) {
+                this.items = items;
+            }
+
+            public static class Items {
+                @SerializedName("item")
+                private List<Item> item;
+
+                public List<Item> getItem() {
+                    return item;
+                }
+
+                public void setItem(List<Item> item) {
+                    this.item = item;
+                }
+
+                public static class Item {
+                    @SerializedName("baseDate")
+                    private String baseDate;
+                    @SerializedName("baseTime")
+                    private String baseTime;
+                    @SerializedName("category")
+                    private String category;
+                    @SerializedName("fcstDate")
+                    private String fcstDate;
+                    @SerializedName("fcstTime")
+                    private String fcstTime;
+                    @SerializedName("fcstValue")
+                    private String fcstValue;
+                    @SerializedName("nx")
+                    private int nx;
+                    @SerializedName("ny")
+                    private int ny;
+
+                    // 카테고리 상수 추가
+                    public static final String TEMP = "TMP";    // 기온
+                    public static final String WIND_EW = "UUU"; // 동서바람성분
+                    public static final String WIND_SN = "VVV"; // 남북바람성분
+                    public static final String WIND_DIR = "VEC"; // 풍향
+                    public static final String WIND_SPD = "WSD"; // 풍속
+
+                    // Getters and Setters
+                    public String getBaseDate() {
+                        return baseDate;
+                    }
+
+                    public void setBaseDate(String baseDate) {
+                        this.baseDate = baseDate;
+                    }
+
+                    public String getBaseTime() {
+                        return baseTime;
+                    }
+
+                    public void setBaseTime(String baseTime) {
+                        this.baseTime = baseTime;
+                    }
+
+                    public String getCategory() {
+                        return category;
+                    }
+
+                    public void setCategory(String category) {
+                        this.category = category;
+                    }
+
+                    public String getFcstDate() {
+                        return fcstDate;
+                    }
+
+                    public void setFcstDate(String fcstDate) {
+                        this.fcstDate = fcstDate;
+                    }
+
+                    public String getFcstTime() {
+                        return fcstTime;
+                    }
+
+                    public void setFcstTime(String fcstTime) {
+                        this.fcstTime = fcstTime;
+                    }
+
+                    public String getFcstValue() {
+                        return fcstValue;
+                    }
+
+                    public void setFcstValue(String fcstValue) {
+                        this.fcstValue = fcstValue;
+                    }
+
+                    public int getNx() {
+                        return nx;
+                    }
+
+                    public void setNx(int nx) {
+                        this.nx = nx;
+                    }
+
+                    public int getNy() {
+                        return ny;
+                    }
+
+                    public void setNy(int ny) {
+                        this.ny = ny;
+                    }
+
+                    // 카테고리 확인 도움 메서드들
+                    public boolean isTemperature() {
+                        return TEMP.equals(category);
+                    }
+
+                    public boolean isWindSpeed() {
+                        return WIND_SPD.equals(category);
+                    }
+
+                    // fcstValue를 숫자로 변환하는 도움 메서드
+                    public double getFcstValueAsDouble() {
+                        try {
+                            return Double.parseDouble(fcstValue);
+                        } catch (NumberFormatException e) {
+                            return 0.0;
+                        }
+                    }
+
+                    public int getFcstValueAsInt() {
+                        try {
+                            return Integer.parseInt(fcstValue);
+                        } catch (NumberFormatException e) {
+                            return 0;
+                        }
+                    }
+                }
+            }
+        }
     }
 
-    public void setNumOfRows(int numOfRows) {
-        this.numOfRows = numOfRows;
+    // Getter for response
+    public Response getResponse() {
+        return response;
     }
 
-    public int getPageNo() {
-        return pageNo;
+    public void setResponse(Response response) {
+        this.response = response;
     }
 
-    public void setPageNo(int pageNo) {
-        this.pageNo = pageNo;
-    }
-
-    public int getTotalCount() {
-        return totalCount;
-    }
-
-    public void setTotalCount(int totalCount) {
-        this.totalCount = totalCount;
-    }
-
-    public String getResultCode() {
-        return resultCode;
-    }
-
-    public void setResultCode(String resultCode) {
-        this.resultCode = resultCode;
-    }
-
-    public String getResultMsg() {
-        return resultMsg;
-    }
-
-    public void setResultMsg(String resultMsg) {
-        this.resultMsg = resultMsg;
-    }
-
-    public String getDataType() {
-        return dataType;
-    }
-
-    public void setDataType(String dataType) {
-        this.dataType = dataType;
-    }
-
-    public String getBaseDate() {
-        return baseDate;
-    }
-
-    public void setBaseDate(String baseDate) {
-        this.baseDate = baseDate;
-    }
-
-    public String getBaseTime() {
-        return baseTime;
-    }
-
-    public void setBaseTime(String baseTime) {
-        this.baseTime = baseTime;
-    }
-
-    public int getNx() {
-        return nx;
-    }
-
-    public void setNx(int nx) {
-        this.nx = nx;
-    }
-
-    public int getNy() {
-        return ny;
-    }
-
-    public void setNy(int ny) {
-        this.ny = ny;
-    }
-
-    public String getCategory() {
-        return category;
-    }
-
-    public void setCategory(String category) {
-        this.category = category;
-    }
-
-    public String getObsrValue() {
-        return obsrValue;
-    }
-
-    public void setObsrValue(String obsrValue) {
-        this.obsrValue = obsrValue;
-    }
-
-    // toString() 오버라이드 (디버깅용)
     @Override
     public String toString() {
         return "WeatherResponse{" +
-                "numOfRows=" + numOfRows +
-                ", pageNo=" + pageNo +
-                ", totalCount=" + totalCount +
-                ", resultCode='" + resultCode + '\'' +
-                ", resultMsg='" + resultMsg + '\'' +
-                ", dataType='" + dataType + '\'' +
-                ", baseDate='" + baseDate + '\'' +
-                ", baseTime='" + baseTime + '\'' +
-                ", nx=" + nx +
-                ", ny=" + ny +
-                ", category='" + category + '\'' +
-                ", obsrValue='" + obsrValue + '\'' +
+                "response=" + response +  // response 객체의 내용을 포함
                 '}';
     }
 }
+
