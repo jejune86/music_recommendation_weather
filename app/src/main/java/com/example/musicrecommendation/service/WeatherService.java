@@ -34,10 +34,11 @@ public class WeatherService {
         // Calculate the current date and the closest base time
         Calendar calendar = Calendar.getInstance();
         int hour = calendar.get(Calendar.HOUR_OF_DAY);
+        Log.d(TAG, "hour = "+hour);
         List<String> baseHours = List.of("02", "05", "08", "11", "14", "17", "20", "23");
 
         // Find the nearest previous base hour
-        String baseHour = "23";
+        String baseHour = "-1";
         for (String bh : baseHours) {
             int bhInt = Integer.parseInt(bh);
             if (bhInt <= hour) {
@@ -46,14 +47,13 @@ public class WeatherService {
                 break;
             }
         }
-
-        int baseHourInt = Integer.parseInt(baseHour);
-        // If current time is before 02:00, use 23:00 of the previous day
-        if (hour < Integer.parseInt(baseHours.get(0))) {
+        int baseHourInt;
+        if (baseHour.equals("-1")) {
             calendar.add(Calendar.DATE, -1);
             baseHour = baseHours.get(baseHours.size() - 1); // "23"
-            baseHourInt = 23;
         }
+        baseHourInt = Integer.parseInt(baseHour);
+
 
         calendar.set(Calendar.HOUR_OF_DAY, baseHourInt);
         calendar.set(Calendar.MINUTE, 0);
@@ -68,7 +68,7 @@ public class WeatherService {
         String serviceKey = BuildConfig.WEATHER_API_KEY;
         weatherAPIInterface.getWeather(
             serviceKey,
-            "500",
+            "50",
             "1",
             "JSON",
             baseDate,
