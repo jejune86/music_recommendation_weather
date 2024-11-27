@@ -5,9 +5,9 @@ import android.util.Log;
 
 import com.example.musicrecommendation.BuildConfig;
 import com.example.musicrecommendation.api.WeatherAPI;
-import com.example.musicrecommendation.data.model.GridXY;
-import com.example.musicrecommendation.data.model.Weather;
-import com.example.musicrecommendation.data.model.WeatherResponse;
+import com.example.musicrecommendation.utils.GridXY;
+import com.example.musicrecommendation.data.model.weather.Weather;
+import com.example.musicrecommendation.data.model.weather.WeatherResponse;
 import java.util.Calendar;
 import java.util.List;
 import retrofit2.Call;

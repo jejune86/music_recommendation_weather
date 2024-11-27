@@ -1,6 +1,4 @@
-package com.example.musicrecommendation;
-
-import static android.content.ContentValues.TAG;
+package com.example.musicrecommendation.ui;
 
 import android.Manifest;
 import android.content.Intent;
@@ -12,9 +10,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-import com.example.musicrecommendation.data.model.Weather;
-import com.example.musicrecommendation.data.model.WeatherResponse;
-import com.example.musicrecommendation.service.WeatherAPIInterface;
+import com.example.musicrecommendation.R;
+import com.example.musicrecommendation.data.model.weather.Weather;
+import com.example.musicrecommendation.service.SpotifyService;
 import com.example.musicrecommendation.service.WeatherService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
@@ -25,9 +23,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.TextView;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -41,10 +36,11 @@ import com.spotify.protocol.error.SpotifyAppRemoteException;
 import com.spotify.sdk.android.auth.AuthorizationClient;
 import com.spotify.sdk.android.auth.AuthorizationRequest;
 
-import com.spotify.protocol.client.Subscription;
-import com.spotify.protocol.types.PlayerState;
 import com.spotify.protocol.types.Track;
 import com.spotify.sdk.android.auth.AuthorizationResponse;
+
+import com.example.musicrecommendation.service.SpotifyAPIInterface;
+import com.google.gson.JsonObject;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -52,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String CLIENT_ID = "e82fa6ae95ff44558883989407732966";
     private static final String REDIRECT_URI = "http://localhost:8888/callback";
     private SpotifyAppRemote mSpotifyAppRemote;
-
+    private String spotifyToken;
+    private SpotifyService spotifyService;
 
 
 
@@ -124,6 +121,8 @@ public class MainActivity extends AppCompatActivity {
                case TOKEN:
                    // Handle successful response
                    Log.d("MainActivity", "Token response: " + response.getAccessToken());
+                   spotifyToken = response.getAccessToken();    
+                   getSpotifyRecommendation();
                    break;
    
                // Auth flow returned an error
@@ -155,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                             mSpotifyAppRemote = spotifyAppRemote;
                             Log.d("MainActivity", "Connected! Yay!");
-                            connected();
+                            //connected();
                         }
 
                         @Override
@@ -233,5 +232,21 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+    }
+
+    private void getSpotifyRecommendation() {
+        spotifyService = new SpotifyService();
+        spotifyService.getSpotifyRecommendation(spotifyToken, new SpotifyService.SpotifyCallback() {
+            @Override
+            public void onSpotifyRecommendationReceived() {
+                // UI 업데이트는 메인 스레드에서 실행해야 합니다
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Log.d("MainActivity", "Spotify 추천 음악 받아옴");
+                    }
+                });
+            }
+        });
     }
 }

@@ -1,4 +1,4 @@
-package com.example.musicrecommendation.data.model;
+package com.example.musicrecommendation.data.model.weather;
 
 public class Weather {
     private static Weather instance;

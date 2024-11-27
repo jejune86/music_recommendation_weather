@@ -78,10 +78,8 @@ dependencies {
     implementation(libs.constraintlayout)
     implementation(libs.play.services.location)
     implementation(files("C:\\Users\\Jun\\Desktop\\music_recommendation_weather2\\app\\libs\\spotify-app-remote-release-0.8.0.aar"))
-    testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
-
     implementation("com.google.code.gson:gson:2.10.1")
 
     implementation("com.spotify.android:auth:1.2.5")

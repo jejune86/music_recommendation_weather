@@ -1,9 +1,8 @@
 package com.example.musicrecommendation.service;
-import com.example.musicrecommendation.data.model.WeatherResponse;
+import com.example.musicrecommendation.data.model.weather.WeatherResponse;
 
 import retrofit2.Call;
 import retrofit2.http.GET;
-import retrofit2.http.Header;
 import retrofit2.http.Query;
 
 public interface WeatherAPIInterface {

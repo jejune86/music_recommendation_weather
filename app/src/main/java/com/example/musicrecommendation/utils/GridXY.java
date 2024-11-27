@@ -1,4 +1,4 @@
-package com.example.musicrecommendation.data.model;
+package com.example.musicrecommendation.utils;
 
 public class GridXY {
     public int x;

@@ -1,4 +1,4 @@
-package com.example.musicrecommendation.data.model;
+package com.example.musicrecommendation.data.model.weather;
 
 import com.google.gson.annotations.SerializedName;
 import java.util.List;
