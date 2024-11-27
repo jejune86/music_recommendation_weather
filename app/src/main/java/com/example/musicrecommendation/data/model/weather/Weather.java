@@ -5,7 +5,7 @@ public class Weather {
     private double temperature;
     private int sky; //~5 맑음, ~8 구름 많음, ~10 흐림
     private int precipitationType; //강수형태 없음(0), 비(1), 비/눈(2), 눈(3), 소나기(4)
-    private double precipitation; //강수량
+    private String precipitation; //강수량
 
     private Weather() {} // private 생성자
 
@@ -44,11 +44,11 @@ public class Weather {
         this.precipitationType = precipitationType;
     }
 
-    public double getPrecipitation() {
+    public String getPrecipitation() {
         return precipitation;
     }
 
-    public void setPrecipitation(double precipitation) {
+    public void setPrecipitation(String precipitation) {
         this.precipitation = precipitation;
     }
 }

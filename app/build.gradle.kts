@@ -85,5 +85,6 @@ dependencies {
     implementation("com.spotify.android:auth:1.2.5")
     // 필요한 추가 의존성
     implementation("androidx.browser:browser:1.7.0")
+    implementation("com.github.bumptech.glide:glide:4.16.0")
 }
 

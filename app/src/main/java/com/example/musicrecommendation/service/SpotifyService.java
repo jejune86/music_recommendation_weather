@@ -23,7 +23,7 @@ public class SpotifyService {
     
     // WeatherCallback 인터페이스 정의
     public interface SpotifyCallback {
-        void onSpotifyRecommendationReceived();
+        void onSpotifyRecommendationReceived(String imageUrl, SpotifyRecommendationResponse.Track track);
     }
 
     public void getSpotifyRecommendation(String token, SpotifyCallback callback) {
@@ -56,14 +56,13 @@ public class SpotifyService {
             @Override
             public void onResponse(Call<SpotifyRecommendationResponse> call, Response<SpotifyRecommendationResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    processSpotifyRecommendation(response.body());
-                    callback.onSpotifyRecommendationReceived();
+                    processSpotifyRecommendation(response.body(), callback);
                 }
             }
 
             @Override
             public void onFailure(Call<SpotifyRecommendationResponse> call, Throwable t) {
-                Log.e(TAG, "Spotify API 호출 실패: " + t.getMessage());
+                Log.e(TAG, "Spotify API call failed: " + t.getMessage());
             }
         });
     }
@@ -89,7 +88,7 @@ public class SpotifyService {
     }
 
     private Range getEnergyRange(Weather weather) {
-        if (weather.getPrecipitationType() > 0) {
+        if (weather.getPrecipitationType() > 0 && !weather.getPrecipitation().equals("0.0mm")) {
             return new Range(0.0, 0.4);  // 비/눈: 낮은 에너지
         } else if (weather.getSky() <= 5) {
             return new Range(0.6, 1.0);  // 맑음: 높은 에너지
@@ -118,12 +117,22 @@ public class SpotifyService {
         }
     }
 
-    private void processSpotifyRecommendation(SpotifyRecommendationResponse response) {
-        if (response != null && response.getTracks() != null) {
-            List<SpotifyRecommendationResponse.Track> tracks = response.getTracks();
-            for (SpotifyRecommendationResponse.Track track : tracks) {
-                Log.d(TAG, "Recommended Track: " + track.getName() + " - " + track.getArtists().get(0).getName());
-
+    private void processSpotifyRecommendation(SpotifyRecommendationResponse response, SpotifyCallback callback) {
+        if (response != null && response.getTracks() != null && !response.getTracks().isEmpty()) {
+            SpotifyRecommendationResponse.Track track = response.getTracks().get(0);
+            
+            // 300x300 이미지 URL 찾기
+            String imageUrl = null;
+            for (SpotifyRecommendationResponse.Image image : track.getAlbum().getImages()) {
+                if (image.getHeight() == 300 && image.getWidth() == 300) {
+                    imageUrl = image.getUrl();
+                    break;
+                }
+            }
+            
+            // 이미지 URL과 트랙 정보를 콜백으로 전달
+            if (imageUrl != null) {
+                callback.onSpotifyRecommendationReceived(imageUrl, track);
             }
         } else {
             Log.e(TAG, "Spotify recommendation empty");

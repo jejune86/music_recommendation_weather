@@ -86,7 +86,7 @@ public class WeatherService {
 
             @Override
             public void onFailure(Call<WeatherResponse> call, Throwable t) {
-                Log.e(TAG, "API 호출 실패: " + t.getMessage());
+                Log.e(TAG, "API call failed: " + t.getMessage());
             }
         });
     }
@@ -121,13 +121,8 @@ public class WeatherService {
                                     break;
                                 case "PCP":
                                     String value = item.getFcstValue();
-                                    Log.d(TAG, "PCP value: " + item.getFcstValue());
-                                    if ("강수없음".equals(value)) {
-                                        weather.setPrecipitation(0.0);
-                                    } else {
-                                        value = value.replace("mm", "");
-                                        weather.setPrecipitation(Double.parseDouble(value));
-                                    }
+                                    Log.d(TAG, "PCP value: " + value);
+                                    weather.setPrecipitation(value);
                                     break;
                             }
                         }

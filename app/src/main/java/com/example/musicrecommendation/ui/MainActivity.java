@@ -3,6 +3,7 @@ package com.example.musicrecommendation.ui;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -11,9 +12,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.example.musicrecommendation.R;
+import com.example.musicrecommendation.data.model.spotify.SpotifyRecommendationResponse;
 import com.example.musicrecommendation.data.model.weather.Weather;
 import com.example.musicrecommendation.service.SpotifyService;
 import com.example.musicrecommendation.service.WeatherService;
+import com.example.musicrecommendation.utils.BackgroundColorManager;
+import com.example.musicrecommendation.utils.MusicParameterManager;
+import com.example.musicrecommendation.utils.TokenManager;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -22,6 +27,9 @@ import android.location.Location;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import retrofit2.Call;
@@ -42,6 +50,23 @@ import com.spotify.sdk.android.auth.AuthorizationResponse;
 import com.example.musicrecommendation.service.SpotifyAPIInterface;
 import com.google.gson.JsonObject;
 
+import com.bumptech.glide.Glide;
+import android.graphics.drawable.Drawable;
+import com.bumptech.glide.load.DataSource;
+import com.bumptech.glide.load.engine.GlideException;
+import com.bumptech.glide.request.RequestListener;
+import com.bumptech.glide.request.target.Target;
+import androidx.annotation.Nullable;
+
+
+import android.widget.ProgressBar;
+
+import java.util.stream.Collectors;
+
+import com.google.android.material.slider.RangeSlider;
+import java.util.List;
+import android.util.Range;
+
 
 public class MainActivity extends AppCompatActivity {
     private static final int REQUEST_CODE = 1337;
@@ -61,7 +86,13 @@ public class MainActivity extends AppCompatActivity {
         void onLocationReceived(Location location);
     }
 
-    private TextView tvTemperature, tvSky, tvPrecipitationType, tvPrecipitation;
+    private TextView tvTemperature, tvSky, tvPrecipitationType, tvPrecipitation, tvTrackName, tvArtistName;
+    private Button button;
+    private ImageView ivAlbumCover;
+    private ProgressBar progressBar;
+
+    private BackgroundColorManager backgroundColorManager;
+    private View mainLayout;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,7 +105,18 @@ public class MainActivity extends AppCompatActivity {
         tvSky = findViewById(R.id.tvSky);
         tvPrecipitationType = findViewById(R.id.tvPrecipitationType);
         tvPrecipitation = findViewById(R.id.tvPrecipitation);
+        button = findViewById(R.id.button);
+        ivAlbumCover = findViewById(R.id.ivAlbumCover);
+        progressBar = findViewById(R.id.progressBar);
+        tvTrackName = findViewById(R.id.tvTrackName);
+        tvArtistName = findViewById(R.id.tvArtistName);
+        tvTrackName.setSelected(true);
+        tvArtistName.setSelected(true);
 
+        button.setOnClickListener(v -> {
+            progressBar.setVisibility(View.VISIBLE);
+            getSpotifyRecommendation();
+        });
 
         // 초기 날씨 데이터 표시
         Weather weather = Weather.getInstance();
@@ -94,51 +136,54 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         }
+
+        backgroundColorManager = new BackgroundColorManager(this);
+        mainLayout = findViewById(R.id.main);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-        AuthorizationRequest.Builder builder =
-        new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
-    
-        builder.setScopes(new String[]{"streaming"});
-        AuthorizationRequest request = builder.build();
-    
-        AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
-        connectSpotify();
+        TokenManager tokenManager = new TokenManager(this);
+        
+        if (tokenManager.isTokenValid()) {
+            // 저장된 토큰 사용
+            spotifyToken = tokenManager.getToken();
+            connectSpotify();
+        } else {
+            // 새로운 인증 필요
+            AuthorizationRequest.Builder builder =
+                new AuthorizationRequest.Builder(CLIENT_ID, AuthorizationResponse.Type.TOKEN, REDIRECT_URI);
+            
+            builder.setScopes(new String[]{"streaming"});
+            AuthorizationRequest request = builder.build();
+            
+            AuthorizationClient.openLoginActivity(this, REQUEST_CODE, request);
+        }
     }
 
+    @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
         super.onActivityResult(requestCode, resultCode, intent);
-   
-        // Check if result comes from the correct activity
+        
         if (requestCode == REQUEST_CODE) {
-           AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
-   
-           switch (response.getType()) {
-               // Response was successful and contains auth token
-               case TOKEN:
-                   // Handle successful response
-                   Log.d("MainActivity", "Token response: " + response.getAccessToken());
-                   spotifyToken = response.getAccessToken();    
-                   getSpotifyRecommendation();
-                   break;
-   
-               // Auth flow returned an error
-               case ERROR:
-                   // Handle error response
-                   Log.d("MainActivity", "Auth error: " + response.getError());
-                   break;
-   
-               // Most likely auth flow was cancelled
-               default:
-                  // Handle other cases
-                  Log.d("MainActivity", "Auth flow cancelled");
+            AuthorizationResponse response = AuthorizationClient.getResponse(resultCode, intent);
+            
+            switch (response.getType()) {
+                case TOKEN:
+                    TokenManager tokenManager = new TokenManager(this);
+                    tokenManager.saveToken(response.getAccessToken(), response.getExpiresIn());
+                    spotifyToken = response.getAccessToken();
+                    connectSpotify();
+                    break;
+                case ERROR:
+                    Log.e("MainActivity", "Auth error: " + response.getError());
+                    break;
+                default:
+                    Log.d("MainActivity", "Auth flow cancelled");
             }
         }
-   }
-
+    }
 
     private void connectSpotify() {
         ConnectionParams connectionParams = new ConnectionParams.Builder(CLIENT_ID)
@@ -154,7 +199,6 @@ public class MainActivity extends AppCompatActivity {
                         public void onConnected(SpotifyAppRemote spotifyAppRemote) {
                             mSpotifyAppRemote = spotifyAppRemote;
                             Log.d("MainActivity", "Connected! Yay!");
-                            //connected();
                         }
 
                         @Override
@@ -175,12 +219,14 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+
     @Override
     protected void onStop() {
         super.onStop();
         SpotifyAppRemote.disconnect(mSpotifyAppRemote);
     }
 
+    // 스포티파이 연결 후 재생, 후에 참고
     private void connected() {
         // Play a playlist
         mSpotifyAppRemote.getPlayerApi().play("spotify:playlist:37i9dQZF1DX2sUQwD7tbmL");
@@ -226,7 +272,15 @@ public class MainActivity extends AppCompatActivity {
                             tvTemperature.setText("온도: " + weather.getTemperature() + "°C");
                             tvSky.setText("하늘 상태: " + weather.getSky());
                             tvPrecipitationType.setText("강수 형태: " + weather.getPrecipitationType());
-                            tvPrecipitation.setText("강수량: " + weather.getPrecipitation() + "mm");
+                            tvPrecipitation.setText("강수량: " + weather.getPrecipitation());
+                            Log.d("MainActivity", "온도: " + weather.getTemperature() + "°C");
+                            Log.d("MainActivity", "하늘 상태: " + weather.getSky());
+                            Log.d("MainActivity", "강수 형태: " + weather.getPrecipitationType());
+                            Log.d("MainActivity", "강수량: " + weather.getPrecipitation());
+
+                            // 배경색 변경
+                            GradientDrawable gradientDrawable = backgroundColorManager.getBackgroundDrawable(weather);
+                            mainLayout.setBackground(gradientDrawable);
                         }
                     });
                 }
@@ -238,13 +292,35 @@ public class MainActivity extends AppCompatActivity {
         spotifyService = new SpotifyService();
         spotifyService.getSpotifyRecommendation(spotifyToken, new SpotifyService.SpotifyCallback() {
             @Override
-            public void onSpotifyRecommendationReceived() {
-                // UI 업데이트는 메인 스레드에서 실행해야 합니다
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        Log.d("MainActivity", "Spotify 추천 음악 받아옴");
-                    }
+            public void onSpotifyRecommendationReceived(String imageUrl, SpotifyRecommendationResponse.Track track) {
+                runOnUiThread(() -> {
+                    Glide.with(MainActivity.this)
+                        .load(imageUrl)
+                        .listener(new RequestListener<Drawable>() {
+                            @Override
+                            public boolean onLoadFailed(@Nullable GlideException e, Object model, Target<Drawable> target, boolean isFirstResource) {
+                                progressBar.setVisibility(View.GONE);
+                                return false;
+                            }
+
+                            @Override
+                            public boolean onResourceReady(Drawable resource, Object model, Target<Drawable> target, DataSource dataSource, boolean isFirstResource) {
+                                progressBar.setVisibility(View.GONE);
+                                return false;
+                            }
+                        })
+                        .into(ivAlbumCover);
+                    
+                    // 트랙 이름과 아티스트 이름을 별도로 표시
+                    tvTrackName.setText(track.getName());
+                    
+                    String artistNames = track.getArtists().stream()
+                            .map(artist -> artist.getName())
+                            .collect(Collectors.joining(", "));
+                    tvArtistName.setText(artistNames);
+                    
+                    Log.d("MainActivity", "Album cover image URL: " + imageUrl);
+                    Log.d("MainActivity", "Track name: " + track.getName());
                 });
             }
         });

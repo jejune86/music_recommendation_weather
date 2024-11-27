@@ -5,16 +5,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Hello World!"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+    tools:context=".ui.MainActivity">
 
     <TextView
         android:id="@+id/tvTemperature"
@@ -52,6 +43,71 @@
         app:layout_constraintStart_toStartOf="parent"
         android:layout_margin="16dp"/>
 
+    <Button
+        android:id="@+id/button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Get Recommendation"
+        app:layout_constraintStart_toStartOf="@id/tvArtistName"
+        app:layout_constraintEnd_toEndOf="@id/tvArtistName"
+        app:layout_constraintTop_toBottomOf="@+id/tvArtistName" />
 
+    <ImageView
+        android:id="@+id/ivAlbumCover"
+        android:layout_width="300dp"
+        android:layout_height="300dp"
+        android:layout_marginStart="56dp"
+        android:layout_marginTop="212dp"
+        android:scaleType="centerCrop"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/ivAlbumCover"
+        app:layout_constraintBottom_toBottomOf="@id/ivAlbumCover"
+        app:layout_constraintStart_toStartOf="@id/ivAlbumCover"
+        app:layout_constraintEnd_toEndOf="@id/ivAlbumCover"/>
+
+    <TextView
+        android:id="@+id/tvTrackName"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:scrollHorizontally="true"
+        android:textColor="@android:color/black"
+        app:layout_constraintTop_toBottomOf="@id/ivAlbumCover"
+        app:layout_constraintStart_toStartOf="@id/ivAlbumCover"
+        app:layout_constraintEnd_toEndOf="@id/ivAlbumCover"/>
+
+    <TextView
+        android:id="@+id/tvArtistName"
+        android:layout_width="300dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:ellipsize="marquee"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:singleLine="true"
+        android:textAlignment="center"
+        android:textSize="14sp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:scrollHorizontally="true"
+        android:textColor="@android:color/darker_gray"
+        app:layout_constraintTop_toBottomOf="@id/tvTrackName"
+        app:layout_constraintStart_toStartOf="@id/tvTrackName"
+        app:layout_constraintEnd_toEndOf="@id/tvTrackName"/>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
